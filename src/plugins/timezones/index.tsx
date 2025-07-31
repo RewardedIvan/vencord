@@ -12,8 +12,8 @@ import { ErrorBoundary, Flex } from "@components/index";
 import { classes } from "@utils/misc";
 import { ModalContent, ModalHeader, ModalRoot, openModal } from "@utils/modal";
 import definePlugin from "@utils/types";
+import { Message } from "@vencord/discord-types";
 import { Button, Menu, SearchableSelect, Text, useMemo, useState } from "@webpack/common";
-import { Message } from "discord-types/general";
 
 // const settings = definePluginSettings({
 // });

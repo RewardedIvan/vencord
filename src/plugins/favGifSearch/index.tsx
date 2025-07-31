@@ -28,9 +28,9 @@ import { copyToClipboard } from "@utils/clipboard";
 import { Devs } from "@utils/constants";
 import { ModalContent, ModalRoot, openModal } from "@utils/modal";
 import definePlugin, { OptionType } from "@utils/types";
+import { SelectOption } from "@vencord/discord-types";
 import { findByPropsLazy } from "@webpack";
 import { Button, Card, ContextMenuApi, Forms, Menu, React, SearchableSelect, Select, Switch, TextArea, TextInput, useCallback, useEffect, useRef, useState } from "@webpack/common";
-import { SelectOption } from "@webpack/types";
 
 interface SearchBarComponentProps {
     ref?: React.MutableRefObject<any>;
