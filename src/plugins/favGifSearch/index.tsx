@@ -28,23 +28,39 @@ import { copyToClipboard } from "@utils/clipboard";
 import { Devs } from "@utils/constants";
 import { ModalContent, ModalRoot, openModal } from "@utils/modal";
 import definePlugin, { OptionType } from "@utils/types";
+
 import { SelectOption } from "@vencord/discord-types";
 import { findByPropsLazy } from "@webpack";
-import { Button, Card, ContextMenuApi, Forms, Menu, React, SearchableSelect, Select, Switch, TextArea, TextInput, useCallback, useEffect, useRef, useState } from "@webpack/common";
+import {
+    Button,
+    Card,
+    ContextMenuApi,
+    Forms,
+    Menu,
+    React,
+    SearchableSelect,
+    Select,
+    Switch,
+    TextArea,
+    TextInput,
+    useCallback,
+    useEffect,
+    useRef,
+    useState
+} from "@webpack/common";
 
 interface SearchBarComponentProps {
-    ref?: React.MutableRefObject<any>;
+    ref?: React.RefObject<any>;
     autoFocus: boolean;
-    className: string;
     size: string;
     onChange: (query: string) => void;
     onClear: () => void;
     query: string;
     placeholder: string;
+    className?: string;
 }
 
-type TSearchBarComponent =
-    React.FC<SearchBarComponentProps>;
+type TSearchBarComponent = React.FC<SearchBarComponentProps>;
 
 interface Gif {
     format: number;
@@ -61,10 +77,9 @@ interface Instance {
         resultType?: string;
     };
     props: {
-        favCopy: Gif[],
-
-        favorites: Gif[],
-    },
+        favCopy: Gif[];
+        favorites: Gif[];
+    };
     forceUpdate: () => void;
 }
 
@@ -97,7 +112,7 @@ interface GIFTag {
     category: TagCategory;
 }
 
-const containerClasses: { searchBar: string; } = findByPropsLazy("searchBar", "searchBarFullRow");
+const containerClasses: { searchBar: string } = findByPropsLazy("searchBar", "searchBarFullRow");
 
 const cl = classNameFactory("vc-fav-gif-search-");
 var gifTags: Array<GIFTag> = [];
@@ -203,7 +218,7 @@ export default definePlugin({
 
 function Header({ instance, SearchBarComponent }: { instance: Instance; SearchBarComponent: TSearchBarComponent; }) {
     const [query, setQuery] = useState("");
-    const ref = useRef<{ containerRef?: React.MutableRefObject<HTMLDivElement>; } | null>(null);
+    const ref = useRef<{ containerRef?: React.RefObject<HTMLDivElement>; } | null>(null);
 
     const onChange = useCallback((searchQuery: string) => {
         setQuery(searchQuery);
@@ -219,7 +234,7 @@ function Header({ instance, SearchBarComponent }: { instance: Instance; SearchBa
 
         // scroll back to top
         ref.current?.containerRef?.current
-            .closest("#gif-picker-tab-panel")
+            ?.closest("#gif-picker-tab-panel")
             ?.querySelector("[class|=\"content\"]")
             ?.firstElementChild?.scrollTo(0, 0);
 
@@ -257,8 +272,8 @@ function Header({ instance, SearchBarComponent }: { instance: Instance; SearchBa
         <SearchBarComponent
             ref={ref}
             autoFocus={true}
-            className={containerClasses.searchBar}
             size="md"
+            className=""
             onChange={onChange}
             onClear={() => {
                 setQuery("");
