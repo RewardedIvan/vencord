@@ -28,7 +28,6 @@ import { copyToClipboard } from "@utils/clipboard";
 import { Devs } from "@utils/constants";
 import { ModalContent, ModalRoot, openModal } from "@utils/modal";
 import definePlugin, { OptionType } from "@utils/types";
-
 import { SelectOption } from "@vencord/discord-types";
 import { findByPropsLazy } from "@webpack";
 import {
@@ -112,7 +111,7 @@ interface GIFTag {
     category: TagCategory;
 }
 
-const containerClasses: { searchBar: string } = findByPropsLazy("searchBar", "searchBarFullRow");
+const containerClasses: { searchBar: string; } = findByPropsLazy("searchBar", "searchBarFullRow");
 
 const cl = classNameFactory("vc-fav-gif-search-");
 var gifTags: Array<GIFTag> = [];
@@ -399,7 +398,7 @@ function AddTagModal({ SearchBarComponent, url }: AddTagModalProps) {
                     onChange={setQuery}
                     query={query}
                     placeholder="Search for a tag"
-                    size={SearchBarComponent.Sizes.MEDIUM}
+                    size="md"
                     onClear={() => setQuery("")}
                 />
             </Forms.FormSection>
@@ -589,8 +588,8 @@ function sortByCategory(a: string, b: string) {
 }
 
 function matchesTags(searchQuery: string, tags: string[]) {
-    console.count("matchesTags");
-    console.log(searchQuery, tags);
+    // console.count("matchesTags");
+    // console.log(searchQuery, tags);
     const searchTags = searchQuery.split(" ").map(tag => tag.toLowerCase()).map(t => t.trim()).filter(Boolean);
 
     const hasExcludedTag = searchTags
