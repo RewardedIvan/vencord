@@ -23,6 +23,7 @@ import { definePluginSettings } from "@api/Settings";
 import { classNameFactory } from "@api/Styles";
 import ErrorBoundary from "@components/ErrorBoundary";
 import { Flex } from "@components/Flex";
+import { FormSwitch } from "@components/FormSwitch";
 import { DeleteIcon } from "@components/Icons";
 import { copyToClipboard } from "@utils/clipboard";
 import { Devs } from "@utils/constants";
@@ -39,7 +40,6 @@ import {
     React,
     SearchableSelect,
     Select,
-    Switch,
     TextArea,
     TextInput,
     useCallback,
@@ -374,24 +374,23 @@ function AddTagModal({ SearchBarComponent, url }: AddTagModalProps) {
         <Flex flexDirection="column">
             <Forms.FormTitle tag="h2">Edit Tags</Forms.FormTitle>
 
-            <Forms.FormSection title="Add New Tag">
-                <div style={{ display: "flex", flexDirection: "row", justifyItems: "stretch", gap: "0.1em" }}>
-                    <SearchableSelect
-                        options={gifTags.filter(t => !isTagInCollection(t.name, currentTags)).map(t => t.name).sort(sortByCategory).map(t => ({ label: t, value: t }))}
-                        value={selectedTag}
-                        onSearchChange={setTagSearchQuery}
-                        onChange={v => setSelectedTag(v)}
-                    />
-                    {selectedTag && (
-                        <Button size={Button.Sizes.LARGE} color={Button.Colors.TRANSPARENT} onClick={() => {
-                            setCurrentTags([...currentTags, selectedTag as any]);
-                            setSelectedTag(undefined);
-                        }}>Add Tag</Button>
-                    )}
-                </div>
-            </Forms.FormSection>
+            <Forms.FormTitle>Add New Tag</Forms.FormTitle>
+            <div style={{ display: "flex", flexDirection: "row", justifyItems: "stretch", gap: "0.1em" }}>
+                <SearchableSelect
+                    options={gifTags.filter(t => !isTagInCollection(t.name, currentTags)).map(t => t.name).sort(sortByCategory).map(t => ({ label: t, value: t }))}
+                    value={selectedTag}
+                    onSearchChange={setTagSearchQuery}
+                    onChange={v => setSelectedTag(v)}
+                />
+                {selectedTag && (
+                    <Button size={Button.Sizes.LARGE} color={Button.Colors.TRANSPARENT} onClick={() => {
+                        setCurrentTags([...currentTags, selectedTag as any]);
+                        setSelectedTag(undefined);
+                    }}>Add Tag</Button>
+                )}
+            </div>
 
-            <Forms.FormSection>
+            <div>
                 <SearchBarComponent
                     autoFocus={true}
                     className=""
@@ -401,13 +400,13 @@ function AddTagModal({ SearchBarComponent, url }: AddTagModalProps) {
                     size="md"
                     onClear={() => setQuery("")}
                 />
-            </Forms.FormSection>
+            </div>
 
             {currentTags.sort(sortByCategory).map(tag => (
                 <Card key={tag}>
                     <Flex style={{ justifyContent: "space-between", padding: "0.5em" }}>
                         <span className={cl(`tag-${gifTags.find(t => t.name === tag)?.category}`)}>{tag}</span>
-                        <Button size={Button.Sizes.ICON} color={Button.Colors.RED} onClick={() => {
+                        <Button size={Button.Sizes.MIN} color={Button.Colors.RED} onClick={() => {
                             setCurrentTags(currentTags.filter(t => t !== tag));
                         }}><DeleteIcon /></Button>
                     </Flex>
@@ -443,56 +442,60 @@ function CreateNewTagModal({ url }: CreateNewTagModalProps) {
 
     return (
         <div style={{ display: "flex", flexDirection: "row", gap: "0.2em", width: "100%" }}>
-            <Forms.FormSection title="Create New Tag">
-                <Flex flexDirection="column" style={{ marginTop: "1em", marginBottom: "1em" }}>
-                    <Forms.FormSection title="Name">
-                        <Forms.FormText>The unique identifier for your tag</Forms.FormText>
-                        <TextInput
-                            value={newTag.name}
-                            onChange={e => setNewTag({ ...newTag, name: e.replace(/[- ]/g, "_").toLowerCase() })}
-                            required={true}
-                            error={errorName ? errorMessage : undefined}
-                        />
-                    </Forms.FormSection>
+            <Forms.FormTitle>Create New Tag</Forms.FormTitle>
+            <Flex flexDirection="column" style={{ marginTop: "1em", marginBottom: "1em" }}>
+                <section>
+                    <Forms.FormTitle>Name</Forms.FormTitle>
+                    <Forms.FormText>The unique identifier for your tag</Forms.FormText>
+                    <TextInput
+                        value={newTag.name}
+                        onChange={e => setNewTag({ ...newTag, name: e.replace(/[- ]/g, "_").toLowerCase() })}
+                        required={true}
+                        error={errorName ? errorMessage : undefined}
+                    />
+                </section>
 
-                    <Forms.FormSection title="Category">
-                        <Forms.FormText>Tag classification</Forms.FormText>
-                        <Select
-                            options={tagCategories.map(c => ({ label: c, value: c }))}
-                            select={v => setNewTag({ ...newTag, category: v })}
-                            isSelected={v => newTag.category === v}
-                            serialize={v => v}
-                            clear={() => setNewTag({ ...newTag, category: "general" })}
-                        />
-                    </Forms.FormSection>
+                <section>
+                    <Forms.FormTitle>Category</Forms.FormTitle>
+                    <Forms.FormText>Tag classification</Forms.FormText>
+                    <Select
+                        options={tagCategories.map(c => ({ label: c, value: c }))}
+                        select={v => setNewTag({ ...newTag, category: v })}
+                        isSelected={v => newTag.category === v}
+                        serialize={v => v}
+                        clear={() => setNewTag({ ...newTag, category: "general" })}
+                    />
+                </section>
 
-                    <Forms.FormSection title="Notes">
-                        <Forms.FormText>Additional information about this tag's purpose</Forms.FormText>
-                        <TextArea
-                            value={newTag.notes}
-                            onChange={e => setNewTag({ ...newTag, notes: e })}
-                        />
-                    </Forms.FormSection>
+                <section>
+                    <Forms.FormTitle>Notes</Forms.FormTitle>
+                    <Forms.FormText>Additional information about this tag's purpose</Forms.FormText>
+                    <TextArea
+                        value={newTag.notes}
+                        onChange={e => setNewTag({ ...newTag, notes: e })}
+                    />
+                </section>
 
-                    <Forms.FormSection title="Alternate Names">
-                        <Forms.FormText>Comma separated list of alternative names for this tag</Forms.FormText>
-                        <TextInput
-                            value={newTag.alternateNames.join(", ")}
-                            onChange={e => setNewTag({ ...newTag, alternateNames: e.split(",").map(name => name.trim()) })}
-                            onBlur={e => setNewTag(prev => ({ ...prev, alternateNames: e.target.value.split(",").map(name => name.trim()).filter(Boolean) }))}
-                            placeholder="tag1, tag2, tag3"
-                        />
-                    </Forms.FormSection>
+                <section>
+                    <Forms.FormTitle>Alternate Names</Forms.FormTitle>
+                    <Forms.FormText>Comma separated list of alternative names for this tag</Forms.FormText>
+                    <TextInput
+                        value={newTag.alternateNames.join(", ")}
+                        onChange={e => setNewTag({ ...newTag, alternateNames: e.split(",").map(name => name.trim()) })}
+                        onBlur={e => setNewTag(prev => ({ ...prev, alternateNames: e.target.value.split(",").map(name => name.trim()).filter(Boolean) }))}
+                        placeholder="tag1, tag2, tag3"
+                    />
+                </section>
 
-                    <Forms.FormSection>
-                        <Switch
-                            value={addToCurrentTags}
-                            onChange={v => setAddToCurrentTags(v)}
-                        >
-                            <Forms.FormText>Add to current tags</Forms.FormText>
-                        </Switch>
-                    </Forms.FormSection>
+                <section>
+                    <FormSwitch
+                        value={addToCurrentTags}
+                        onChange={v => setAddToCurrentTags(v)}
+                        title="Add to current tags"
+                    />
+                </section>
 
+                <div>
                     <Button onClick={() => {
                         if (errorName) {
                             return;
@@ -507,14 +510,14 @@ function CreateNewTagModal({ url }: CreateNewTagModalProps) {
 
                         setNewTag(defaultTag);
                     }}>Create GIF Tag</Button>
-                </Flex>
-            </Forms.FormSection>
+                </div>
+            </Flex>
 
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5em", overflowY: "auto" }}>
                 {currentGIFTags.map(tag => (
                     <Card key={tag.name} style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: "0.5em" }}>
                         <span className={cl(`tag-${tag.category}`)}>{tag.name}</span>
-                        <Button size={Button.Sizes.ICON} color={Button.Colors.RED} onClick={() => {
+                        <Button size={Button.Sizes.MIN} color={Button.Colors.RED} onClick={() => {
                             setCurrentGIFTags(currentGIFTags.filter(t => t.name !== tag.name));
                         }}><DeleteIcon /></Button>
                     </Card>

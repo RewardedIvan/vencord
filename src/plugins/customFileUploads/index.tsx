@@ -7,7 +7,8 @@
 import { definePluginSettings } from "@api/Settings";
 import { insertTextIntoChatInputBox } from "@utils/discord";
 import definePlugin, { OptionType } from "@utils/types";
-import { JSONPathJS } from './jsonpath.js';
+
+import { JSONPathJS } from "./jsonpath.js";
 
 const settings = definePluginSettings({
     denyAll: {
@@ -30,7 +31,7 @@ function handleFormdata(dm: any, fileList: FileList, platform: Platform) {
 
     const files = Array.from(fileList);
     const urls = files.map(file => {
-        let formData = new FormData();
+        const formData = new FormData();
 
         for (const [key, value] of Object.entries(platform.formData)) {
             if (value === "file!") {
