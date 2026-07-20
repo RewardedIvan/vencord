@@ -33,7 +33,6 @@ import { SelectOption } from "@vencord/discord-types";
 import { findByPropsLazy } from "@webpack";
 import {
     Button,
-    Card,
     ContextMenuApi,
     Forms,
     Menu,
@@ -404,14 +403,14 @@ function AddTagModal({ SearchBarComponent, url }: AddTagModalProps) {
             </div>
 
             {currentTags.sort(sortByCategory).map(tag => (
-                <Card key={tag}>
+                <div key={tag}>
                     <Flex style={{ justifyContent: "space-between", padding: "0.5em" }}>
                         <span className={cl(`tag-${gifTags.find(t => t.name === tag)?.category}`)}>{tag}</span>
                         <Button size={Button.Sizes.MIN} color={Button.Colors.RED} onClick={() => {
                             setCurrentTags(currentTags.filter(t => t !== tag));
                         }}><DeleteIcon /></Button>
                     </Flex>
-                </Card>
+                </div>
             ))}
         </Flex>
     );
@@ -516,12 +515,12 @@ function CreateNewTagModal({ url }: CreateNewTagModalProps) {
 
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5em", overflowY: "auto" }}>
                 {currentGIFTags.map(tag => (
-                    <Card key={tag.name} style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: "0.5em" }}>
+                    <div key={tag.name} style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: "0.5em" }}>
                         <span className={cl(`tag-${tag.category}`)}>{tag.name}</span>
                         <Button size={Button.Sizes.MIN} color={Button.Colors.RED} onClick={() => {
                             setCurrentGIFTags(currentGIFTags.filter(t => t.name !== tag.name));
                         }}><DeleteIcon /></Button>
-                    </Card>
+                    </div>
                 ))}
             </div>
         </div>
