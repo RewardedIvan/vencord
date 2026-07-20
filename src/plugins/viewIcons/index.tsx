@@ -62,6 +62,7 @@ const settings = definePluginSettings({
     },
     imgSize: {
         type: OptionType.SELECT,
+        displayName: "Image Size",
         description: "The image size to use",
         options: ["128", "256", "512", "1024", "2048", "4096"].map(n => ({ label: n, value: n, default: n === "1024" }))
     }
@@ -180,7 +181,8 @@ export default definePlugin({
     name: "ViewIcons",
     authors: [Devs.Ven, Devs.TheKodeToad, Devs.Nuckyz, Devs.nyx],
     description: "Makes avatars and banners in user profiles clickable, adds View Icon/Banner entries in the user, server and group channel context menu.",
-    tags: ["ImageUtilities"],
+    tags: ["Media", "Servers", "Appearance"],
+    searchTerms: ["ImageUtilities"],
     dependencies: ["DynamicImageModalAPI"],
 
     settings,
@@ -197,17 +199,17 @@ export default definePlugin({
     patches: [
         // Avatar component used in User DMs "User Profile" popup in the right and User Profile Modal pfp
         {
-            find: "imageClassName:null!=",
+            find: "return{avatarProps:{",
             replacement: {
-                match: /avatarSrc:(\i),eventHandlers:(\i).+?"div",.{0,100}className:\i,/,
-                replace: "$&style:{cursor:\"pointer\"},onClick:()=>{$self.openAvatar($1)},",
+                match: /(?<=avatarProps:(\i),eventHandlers:\i.{0,100}?)return null==(?<=onOpenAvatar:(\i).+?)/,
+                replace: "$2&&=$self.openAvatar.bind(undefined,$1.src);$&",
             }
         },
         // Banners
         {
             find: 'backgroundColor:"COMPLETE"',
             replacement: {
-                match: /(overflow:"visible",.{0,125}?!1\),)style:{(?=.+?backgroundImage:null!=(\i)\?"url\("\.concat\(\2,)/,
+                match: /(overflow:"visible",.{0,125}?!1\),)style:{(?=.+?backgroundImage:null!=(\i)\?`url\(\$\{\2\}\))/,
                 replace: (_, rest, bannerSrc) => `${rest}onClick:()=>${bannerSrc}!=null&&$self.openBanner(${bannerSrc}),style:{cursor:${bannerSrc}!=null?"pointer":void 0,`
             }
         },
