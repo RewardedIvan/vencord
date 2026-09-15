@@ -1,0 +1,28 @@
+.vc-pgp-msg-tooltip-contents {
+    display: flex;
+    gap: 1em;
+    flex-direction: column;
+}
+
+div:has(> div > .vc-pgp-msg-tooltip-contents) {
+    max-width: 50em;
+}
+
+div:has(> div > .vc-pgp-recipient-tooltip-contents) {
+    max-width: 30em;
+}
+
+.vc-pgp-avatar {
+    position: relative;
+    border: 2px solid var(--background-surface-higher);
+}
+.vc-pgp-avatar:not(:last-child) {
+    margin-left: -10px;
+}
+
+.vc-pgp-recipient-text {
+    text-overflow: ellipsis;
+    overflow: hidden;
+    min-width: 0;
+    white-space: nowrap;
+}
