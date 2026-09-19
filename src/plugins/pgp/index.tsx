@@ -269,31 +269,6 @@ export default definePlugin({
     },
 
     patches: [
-        //{
-        //    // Indicator
-        //    find: ".SEND_FAILED,",
-        //    replacement: {
-        //        match: /let\{className:\i,message:\i[^}]*\}=(\i)/,
-        //        replace:
-        //            "try {$1 && $self.INV_REGEX.test($1.message.content) ? $1.content.push($self.indicator()) : null } catch {};$&,
-        //    },
-        //},
-        //{
-        //    find: '"MessageStore"',
-        //    replacement: [
-        //        {
-        //            match: /(?<=MESSAGE_CREATE:function\((\i)\){)/,
-        //            replace: (_, props) => `$self.modify(${props}.message);`
-        //        }
-        //    ]
-        //},
-        //{
-        //    find: ".SEND_FAILED,",
-        //    replacement: {
-        //        match: /(?<=\.jsx\).{0,100})message:\s*(\i)/,
-        //        replace: "message:$self.modify($1)"
-        //    }
-        //},
         {
             find: /renderContentOnly:/,
             replacement: {
@@ -336,13 +311,6 @@ export default definePlugin({
                 replace: "if($self.settings.store.encryptAttachments&&null!=this.item.file&&!this.item);$&",
             },
         },
-        /*{
-            find: ".SEND_FAILED,",
-            replacement: {
-                match: /let\s{0,1}\{{.{0,200}content:.{0,500}}\s{0,1}=.{0,100}SEND_FAILED/,
-                replace: "$self.renderAfterMessage(arguments[0]);$&",
-            },
-        },*/
     ],
 
     modify(
