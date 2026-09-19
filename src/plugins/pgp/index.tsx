@@ -7,7 +7,6 @@
 import { CodeBlock } from "@components/CodeBlock";
 import { CopyIcon } from "@components/Icons";
 import definePlugin, {
-    IconComponent,
     PluginNative,
     ReporterTestable,
 } from "@utils/types";
@@ -19,13 +18,9 @@ import {
 } from "@vencord/discord-types";
 import {
     ChannelStore,
-    Constants,
-    RestAPI,
     showToast,
-    SnowflakeUtils,
     Toasts,
     Tooltip,
-    UploadManager,
     UserStore,
 } from "@webpack/common";
 import { BaseText } from "@components/BaseText";
@@ -37,9 +32,7 @@ import {
     removeMessagePreSendListener,
 } from "@api/MessageEvents";
 import { classNameFactory } from "@utils/css";
-import { filters, findByCodeLazy, findLazy } from "@webpack";
-import { waitForComponent } from "@webpack/common/internal";
-import { ComponentType, PropsWithChildren } from "react";
+import { findByCodeLazy, findLazy } from "@webpack";
 import {
     LockCheckIcon,
     LockIcon,
@@ -68,28 +61,6 @@ export const Native = VencordNative.pluginHelpers.PGP as PluginNative<
 type Key = import("./native").Key;
 
 export const cl = classNameFactory("vc-pgp-");
-
-// unused for now
-// type CheckBoxOptionProps = ComponentType<
-//     PropsWithChildren<{
-//         checked?: boolean;
-//         description?: React.ReactNode;
-//         onChange?: (e: React.MouseEvent<HTMLDivElement>) => void;
-//         disabled?: boolean;
-//         displayOnly?: boolean;
-//         label?: React.ReactNode | null;
-//         // aria-labelledby
-//         labeledBy?: string;
-//         leadingIcon?: IconComponent;
-//         value?: string | number | boolean;
-//         labelType?: "primary" | "secondary";
-//         usageVariant?: "single" | "indicator";
-//     }>
-// >;
-// export const CheckboxOption = waitForComponent<CheckBoxOptionProps>(
-//     "Checkbox",
-//     filters.componentByCode('.checkboxOption,"string"'),
-// );
 
 const uploadFiles: (
     files: File[],
@@ -224,7 +195,6 @@ function RenderIndicator({
     const d = md(message);
     const loading = message["pgp_processing"];
     if (loading || d?.isEncrypted || d?.isSigned) {
-        //    console.error(message.content.substring(0, 15) + ": true");
         return (
             <div
                 style={
@@ -271,8 +241,6 @@ function RenderIndicator({
                 )}
             </div>
         );
-        //} else {
-        //    console.error(message.content.substring(0, 15) + ": false: " + typeof message["pgp_errs"] + "; '" + message["pgp_errs"] + "'");
     }
 }
 
@@ -307,7 +275,7 @@ export default definePlugin({
         //    replacement: {
         //        match: /let\{className:\i,message:\i[^}]*\}=(\i)/,
         //        replace:
-        //            "try {$1 && $self.INV_REGEX.test($1.message.content) ? $1.content.push($self.indicator()) : null } catch {};$&",
+        //            "try {$1 && $self.INV_REGEX.test($1.message.content) ? $1.content.push($self.indicator()) : null } catch {};$&,
         //    },
         //},
         //{
@@ -371,7 +339,7 @@ export default definePlugin({
         /*{
             find: ".SEND_FAILED,",
             replacement: {
-                match: /let\s{0,1}\{.{0,200}content:.{0,500}}\s{0,1}=.{0,100}SEND_FAILED/,
+                match: /let\s{0,1}\{{.{0,200}content:.{0,500}}\s{0,1}=.{0,100}SEND_FAILED/,
                 replace: "$self.renderAfterMessage(arguments[0]);$&",
             },
         },*/
@@ -427,7 +395,6 @@ export default definePlugin({
                 for (const match of signedMatches) {
                     const fullMatch = match[0];
                     const cleartextBody = match[1];
-                    //const signatureBlock = match[2];
 
                     const { out, goodSignaturez } =
                         await Native.verify(fullMatch);
@@ -555,18 +522,10 @@ export default definePlugin({
                 } satisfies PGPMsgData;
 
                 message.content = content;
-                //FluxDispatcher.dispatch({
-                //    type: "MESSAGE_UPDATE",
-                //    message: msg,
-                //});
                 forceUpdate();
-                //console.error("decrypted: '" + decrypted + "'");
             }
             message["pgp_processing"] = false;
         })();
-        //msg.content = "# silly test: \n" + msg.content;
-        //console.log("got message: ", msg);
-        //return msg;
     },
 
     renderAfterMessage({
@@ -587,12 +546,6 @@ export default definePlugin({
     },
 
     renderHeader: RenderIndicator,
-
-    //flux: {
-    //    MESSAGE_CREATE({ message, optimistic }: { message: Message; optimistic: boolean; }) {
-    //        if (optimistic) return;
-    //    }
-    //}
 
     async start() {
         await loadPKs();
@@ -759,8 +712,6 @@ export default definePlugin({
     messagePopoverButton: {
         icon: CopyIcon,
         render(message) {
-            //const [, rerender] = useReducer((x) => x + 1, 0);
-
             const d = md(message);
             return d
                 ? {
@@ -786,7 +737,6 @@ export default definePlugin({
                           }
 
                           d.forceUpdate();
-                          //rerender();
                       },
                   }
                 : null;
