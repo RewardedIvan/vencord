@@ -288,7 +288,6 @@ export const settings = definePluginSettings({
     encryptAttachments: {
         type: OptionType.BOOLEAN,
         default: true,
-        description:
-            "en..crypts attachemnts..",
-    }
+        description: "en..crypts attachemnts..",
+    },
 });

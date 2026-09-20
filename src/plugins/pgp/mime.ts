@@ -1,4 +1,17 @@
-const TEXT_TYPES = {
+type Expand<T> = { [K in keyof T]: T[K] } & {};
+
+type Invert<T extends Record<PropertyKey, PropertyKey>> = Expand<{
+    [K in keyof T as T[K]]: K;
+}>;
+
+export const flipObject = <const T extends Record<PropertyKey, PropertyKey>>(
+    obj: T,
+): Invert<T> =>
+    Object.fromEntries(
+        Object.entries(obj).map(([k, v]) => [v, k]),
+    ) as Invert<T>;
+
+export const TEXT_MTYPES = {
     txt: "text/plain",
     md: "text/markdown",
     vtt: "text/vtt",
@@ -8,20 +21,10 @@ const TEXT_TYPES = {
     css: "text/css",
     js: "text/javascript",
     mjs: "text/javascript",
-};
+} as const;
+export const MTYPES_TEXT = flipObject(TEXT_MTYPES);
 
-const MIME_TYPES = {
-    // Video
-    webm: "video/webm",
-    mp4: "video/mp4",
-    ts: "video/mp2t",
-    m3u8: "application/x-mpegURL",
-    ogv: "video/ogg",
-    avi: "video/x-msvideo",
-    mov: "video/quicktime",
-    mkv: "video/x-matroska",
-
-    // Images
+export const IMAGE_MTYPES = {
     webp: "image/webp",
     jpg: "image/jpeg",
     jpeg: "image/jpeg",
@@ -30,9 +33,25 @@ const MIME_TYPES = {
     svg: "image/svg+xml",
     ico: "image/x-icon",
     avif: "image/avif",
+} as const;
+export const MTYPES_IMAGE = flipObject(IMAGE_MTYPES);
 
-    // Text & Captions
-    ...TEXT_TYPES,
+export const VIDEO_MTYPES = {
+    webm: "video/webm",
+    mp4: "video/mp4",
+    ts: "video/mp2t",
+    m3u8: "application/x-mpegURL",
+    ogv: "video/ogg",
+    avi: "video/x-msvideo",
+    mov: "video/quicktime",
+    mkv: "video/x-matroska",
+} as const;
+export const MTYPES_VIDEO = flipObject(VIDEO_MTYPES);
+
+const MIME_TYPES = {
+    ...VIDEO_MTYPES,
+    ...IMAGE_MTYPES,
+    ...TEXT_MTYPES,
 
     // Audio
     mp3: "audio/mpeg",
@@ -53,7 +72,7 @@ const MIME_TYPES = {
     zip: "application/zip",
     gz: "application/gzip",
     tar: "application/x-tar",
-};
+} as const;
 
 export function getFileExt(filename: string) {
     const parts = filename.split(".");
@@ -64,6 +83,6 @@ export function getFileExt(filename: string) {
 export function getMimeType(ext?: string): string {
     return (ext && MIME_TYPES[ext]) ?? "application/octet-stream";
 }
-export function isExtTxt(ext?: string): boolean {
-    return Boolean(ext && TEXT_TYPES[ext]);
+export function isPartOf(ext: string | undefined, obj: any): boolean {
+    return Boolean(ext && obj[ext]);
 }

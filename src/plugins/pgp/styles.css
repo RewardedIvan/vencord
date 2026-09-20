@@ -26,3 +26,12 @@ div:has(> div > .vc-pgp-recipient-tooltip-contents) {
     min-width: 0;
     white-space: nowrap;
 }
+
+.vc-pgp-attach-indicator {
+    color: var(--interactive-icon-default);
+}
+
+.vc-pgp-attach-indicator:hover {
+    background-color: var(--background-mod-subtle);
+    color: var(--interactive-icon-hover);
+}

@@ -128,12 +128,13 @@ async function cmd(
 type SignOpts = {
     defaultKey?: string;
     ascii?: boolean;
+    base64Content?: boolean;
 };
 
 export async function sign(
     e: IpcMainInvokeEvent,
     content: string,
-    { ascii, defaultKey }: SignOpts,
+    { ascii, defaultKey, base64Content }: SignOpts,
 ) {
     var args = "";
 
@@ -151,7 +152,10 @@ export async function sign(
         args += " --default-key " + defaultKey;
     }
 
-    return await cmd(e, `-s${args}`, { stdin: content, bin: !ascii });
+    return await cmd(e, `-s${args}`, {
+        stdin: base64Content ? Uint8Array.fromBase64(content) : content,
+        bin: !ascii,
+    });
 }
 
 export type Key = {
@@ -330,6 +334,7 @@ export async function verifyDetached(
     e: IpcMainInvokeEvent,
     content: string,
     sigUrl: string,
+    isContentAnUrl?: boolean,
 ): Promise<VerifyOut> {
     const parsed = new URL(sigUrl);
     if (
@@ -337,6 +342,19 @@ export async function verifyDetached(
         parsed.origin !== "https://cdn.discordapp.com"
     ) {
         return null as any;
+    }
+    var parsed2: URL | null = null;
+    if (isContentAnUrl) {
+        parsed2 = new URL(content);
+
+        if (
+            !parsed2.pathname.startsWith("/attachments/") ||
+            parsed2.origin !== "https://cdn.discordapp.com"
+        ) {
+            return null as any;
+        }
+
+        console.warn("FETCHING " + parsed2);
     }
 
     console.warn("FETCHING " + parsed);
@@ -349,7 +367,9 @@ export async function verifyDetached(
         {
             stdin: await res.bytes(),
             obj: true,
-            extraData: content,
+            extraData: isContentAnUrl
+                ? await (await fetch(parsed2 as URL)).bytes()
+                : content,
         },
     );
     return {
@@ -364,13 +384,14 @@ type EncOpts = {
     defaultKey?: string;
     trustAlways?: boolean;
     ascii?: boolean;
+    base64Content?: boolean;
 };
 
-export async function encryptText(
+export async function encrypt(
     e: IpcMainInvokeEvent,
     content: string,
     contacts: string[],
-    { sign, defaultKey, trustAlways, ascii }: EncOpts,
+    { sign, defaultKey, trustAlways, ascii, base64Content }: EncOpts,
 ) {
     if (contacts.find((c) => !FPRINT_REGEX.test(c)) != undefined) {
         return ["", ""];
@@ -396,7 +417,7 @@ export async function encryptText(
     args += " " + contacts.map((c) => "-r " + c).join(" ");
 
     const out = await cmd(e, `-e --batch${args}`, {
-        stdin: content,
+        stdin: base64Content ? Uint8Array.fromBase64(content) : content,
         bin: !ascii,
     });
 

@@ -6,13 +6,11 @@
 
 import { CodeBlock } from "@components/CodeBlock";
 import { CopyIcon } from "@components/Icons";
-import definePlugin, {
-    PluginNative,
-    ReporterTestable,
-} from "@utils/types";
+import definePlugin, { PluginNative, ReporterTestable } from "@utils/types";
 import {
     Channel,
     Message,
+    MessageAttachment,
     PopoutPosition,
     CloudUpload as TCloudUpload,
 } from "@vencord/discord-types";
@@ -44,7 +42,14 @@ import {
 import { settings } from "./settings";
 
 import "./styles.css";
-import { getFileExt, getMimeType, isExtTxt } from "./mime";
+import {
+    getFileExt,
+    getMimeType,
+    isPartOf,
+    MTYPES_IMAGE,
+    MTYPES_VIDEO,
+    TEXT_MTYPES,
+} from "./mime";
 import { CloudUploadPlatform, DraftType } from "@vencord/discord-types/enums";
 import { showNotification } from "@api/Notifications";
 import { Span } from "@components/Span";
@@ -176,9 +181,17 @@ type PGPMsgData = {
 };
 type PGPAtchData = {
     originalUrl: string;
+    isSigned?: boolean;
+    isEncrypted?: boolean;
+    hasGoodSignaturez?: boolean;
+    errs: string;
 };
 
-const md = (m: Message) => m["pgp"] as PGPMsgData;
+const md = <T extends Message | MessageAttachment>(
+    m: T,
+): T extends MessageAttachment ? PGPAtchData : PGPMsgData => {
+    return m["pgp"] as T extends MessageAttachment ? PGPAtchData : PGPMsgData;
+};
 const empty_blob_url = URL.createObjectURL(new Blob([], {}));
 
 function RenderIndicator({
@@ -187,7 +200,7 @@ function RenderIndicator({
     noStyle,
     tooltipPosition,
 }: {
-    message: Message;
+    message: Message | MessageAttachment;
     afterMessage?: boolean;
     noStyle?: boolean;
     tooltipPosition?: PopoutPosition;
@@ -242,6 +255,20 @@ function RenderIndicator({
             </div>
         );
     }
+}
+
+function getSecretKey(): string | undefined {
+    const key = settings.store.secretKey;
+    return key !== "whatever" ? key : undefined;
+}
+
+function notifyPGPError(stderr: string): void {
+    showNotification({
+        title: "PGP",
+        body: stderr,
+        richBody: <Span style={{ whiteSpace: "pre-wrap" }}>{stderr}</Span>,
+        onClick: () => copyWithToast(stderr),
+    });
 }
 
 export default definePlugin({
@@ -308,10 +335,147 @@ export default definePlugin({
             find: 'async upload(){if("COMPLETED"',
             replacement: {
                 match: /let \i=await \i\.getUploadPayload\(this\).{0,50}\(this\.item\.target\);/,
-                replace: "if($self.settings.store.encryptAttachments&&null!=this.item.file&&!this.item);$&",
+                replace:
+                    "if($self.settings.store.encryptAttachments&&null!=this.item.file&&!this.item.file.pgp){" +
+                    "this.item.file=await $self.encryptFile(this.item.file,this.channelId);this.currentSize=this.item.file.size;this.setFilename(this.item.file.name)" +
+                    "};$&",
+            },
+        },
+        {
+            find: /MEDIA_DOWNLOAD_BUTTON_TAPPED.{0,150}Anchor/,
+            replacement: {
+                match: /(?<=\{let.{0,50}href:(\i).{0,100}\}=(\i),.{0,100}useCallback.{0,50}\{).{0,50}MEDIA_DOWNLOAD_BUTTON_TAPPED,\{.{0,90}\}\),.{0,90}(?=\},\[)/,
+                replace:
+                    'if($1.startsWith("blob:")){' +
+                    "$2.preventDefault();$self.blobA.download=$self.url_attachs[$1].filename;$self.blobA.href=$1;$self.blobA.click()" +
+                    "}else{$&}",
+            },
+        },
+        {
+            // tries to be compatible with PictureInPicture
+            // but it won't be if vencord loads it before pgp
+            find: '["VIDEO","CLIP","AUDIO"]',
+            replacement: {
+                match: /(\[\i>0&&\i\.length>0.{0,150}?children:)(.+?)(\}\),)(?<=showDownload:(\i).+?)/,
+                replace:
+                    "$1[$self.renderAttachmentIcon(arguments[0]),...$2]$3",
             },
         },
     ],
+
+    renderAttachmentIcon({ downloadURL }: { downloadURL: string }) {
+        const a = this.url_attachs[downloadURL];
+        if (!a) return <></>;
+        return (
+            <Tooltip text="Copy original url">
+                {(tooltipProps) => (
+                    <div
+                        {...tooltipProps}
+                        className={cl("attach-indicator")}
+                        role="button"
+                        style={{
+                            cursor: "pointer",
+                            paddingTop: "4px",
+                            paddingLeft: "4px",
+                            paddingRight: "4px",
+                        }}
+                        onClick={async () => {
+                            await navigator.clipboard.writeText(
+                                md(a).originalUrl ?? downloadURL,
+                            );
+                            showToast("Copied!");
+                        }}
+                    >
+                        <RenderIndicator
+                            message={a}
+                            noStyle
+                            tooltipPosition="bottom"
+                        />
+                    </div>
+                )}
+            </Tooltip>
+        );
+    },
+
+    url_attachs: {} as Record<string, MessageAttachment | undefined>,
+
+    async encryptFile(file: File, channelId: string) {
+        if (state.mode == "pt") {
+            return file;
+        }
+        const fr = new FileReader();
+        const onLoad = async (dp: (value: unknown) => void) => {
+            const b64 = (fr.result as string).split(";base64,")[1];
+
+            if (state.mode == "s") {
+                const [stdout, stderr, ec] = await Native.sign(b64, {
+                    defaultKey: getSecretKey(),
+                    ascii: false,
+                    base64Content: true,
+                });
+
+                if (ec !== 0) {
+                    notifyPGPError(stderr);
+                    dp(file);
+                    return;
+                }
+
+                const blob = new Blob([Uint8Array.fromBase64(stdout ?? "")], {
+                    type: "application/pgp-encrypted",
+                });
+
+                const sigFile = new File([blob], file.name + ".sig", {
+                    type: "application/pgp-encrypted",
+                });
+                sigFile["pgp"] = true;
+
+                await uploadFiles(
+                    [sigFile],
+                    ChannelStore.getChannel(channelId),
+                    DraftType.ChannelMessage,
+                    { requireConfirm: true },
+                );
+
+                file["pgp"] = true;
+                dp(file);
+                return;
+            }
+
+            const [stdout, stderr, ec] = await Native.encrypt(
+                b64,
+                state.recipients,
+                {
+                    sign: state.mode === "es",
+                    defaultKey: getSecretKey(),
+                    trustAlways: settings.store.trustAlways,
+                    base64Content: true,
+                },
+            );
+
+            if (ec !== 0) {
+                notifyPGPError(stderr);
+                dp(file);
+                return;
+            }
+
+            const blob = new Blob([Uint8Array.fromBase64(stdout ?? "")], {
+                type: "application/pgp-encrypted",
+            });
+
+            const newFile = new File([blob], file.name + ".pgp", {
+                type: "application/pgp-encrypted",
+            });
+            newFile["pgp"] = true;
+
+            dp(newFile);
+        };
+
+        const promise = new Promise((dp) => {
+            fr.onload = () => onLoad(dp);
+        });
+        fr.readAsDataURL(file);
+        return promise;
+    },
 
     modify(
         { message, groupId }: { message: Message; groupId: string },
@@ -386,11 +550,11 @@ export default definePlugin({
 
                 const isAtchEncrypted =
                     a.filename.endsWith(".pgp") || a.filename.endsWith(".gpg");
-                const isAtchSigned = a.filename.endsWith(".sig");
+                const isSignature = a.filename.endsWith(".sig");
                 if (
                     !(
                         isAtchEncrypted ||
-                        isAtchSigned ||
+                        isSignature ||
                         a.filename.startsWith("content.")
                     ) ||
                     a["pgp"] != undefined
@@ -404,6 +568,7 @@ export default definePlugin({
 
                 a["pgp"] = {
                     originalUrl: a.url,
+                    errs: "",
                 } satisfies PGPAtchData;
 
                 if (a.filename == "content.sig") {
@@ -417,7 +582,43 @@ export default definePlugin({
 
                     errs += out.stderr + "\n";
                     a.filename += " (looked at)";
+                    a["pgp"].errs += out.stderr + "\n";
                     a["pgp"].consumed = true;
+
+                    continue;
+                }
+
+                if (isSignature) {
+                    const origFilename = a.filename.substring(
+                        0,
+                        a.filename.length - ".sig".length,
+                    );
+                    const a2 = message.attachments.find(
+                        (a2) => a2.filename == origFilename,
+                    );
+
+                    if (!a2) {
+                        console.error("couldn't find file for " + a.filename);
+                        continue;
+                    }
+
+                    const { out, goodSignaturez } = await Native.verifyDetached(
+                        a2.url,
+                        a.url,
+                        true,
+                    );
+
+                    a2["pgp"] ??= {};
+                    a2["pgp"].hasGoodSignaturez = goodSignaturez;
+                    a2["pgp"].isSigned = true;
+                    a2["pgp"].errs ??= "";
+                    a2["pgp"].errs += out.stderr + "\n";
+
+                    a.filename += " (looked at)";
+                    a["pgp"].consumed = true;
+
+                    this.url_attachs[a.url] = a;
+                    this.url_attachs[a2.url] = a2;
 
                     continue;
                 }
@@ -440,7 +641,7 @@ export default definePlugin({
                 }
 
                 const ext = getFileExt(a.filename);
-                const isTxt = isExtTxt(ext);
+                const isTxt = isPartOf(ext, TEXT_MTYPES);
 
                 const { out, signed, encrypted, goodSignaturez } =
                     await Native.decryptAttachment(a.url, !isTxt);
@@ -461,19 +662,70 @@ export default definePlugin({
                         { type: getMimeType(ext) },
                     );
 
-                    a.url = URL.createObjectURL(blob);
+                    a.url = URL.createObjectURL(blob) + "#";
+                    a.proxy_url = a.url;
+                    // a.content_type = undefined;
+                    this.url_attachs[a.url] = a;
                     a.size = blob.size;
                     a.content_type = blob.type;
+                    if (isPartOf(blob.type, MTYPES_IMAGE)) {
+                        // from PreviewMessage
+                        const getImageBox = (
+                            url: string,
+                        ): Promise<{ width: number; height: number } | null> =>
+                            new Promise((res) => {
+                                const img = new Image();
+                                img.onload = () =>
+                                    res({
+                                        width: img.width,
+                                        height: img.height,
+                                    });
+
+                                img.onerror = () => res(null);
+
+                                img.src = url;
+                            });
+
+                        const box = await getImageBox(a.url);
+                        if (box) {
+                            a.width = box.width;
+                            a.height = box.height;
+                        }
+                    } else if (isPartOf(blob.type, MTYPES_VIDEO)) {
+                        const getVideoBox = (
+                            url: string,
+                        ): Promise<{ width: number; height: number } | null> =>
+                            new Promise((res) => {
+                                const video = document.createElement("video");
+                                video.preload = "metadata";
+
+                                video.onloadedmetadata = () =>
+                                    res({
+                                        width: video.videoWidth,
+                                        height: video.videoHeight,
+                                    });
+
+                                video.onerror = () => res(null);
+
+                                video.src = url;
+                            });
+
+                        const box = await getVideoBox(a.url);
+                        if (box) {
+                            a.width = box.width;
+                            a.height = box.height;
+                        }
+                    }
                 }
 
-                isEncrypted ||= encrypted;
-                isSigned ||= signed;
+                a["pgp"].isEncrypted ||= encrypted;
+                a["pgp"].isSigned ||= signed;
                 if (goodSignaturez !== undefined) {
-                    hasGoodSignaturez ??= goodSignaturez;
-                    hasGoodSignaturez &&= goodSignaturez;
+                    a["pgp"].hasGoodSignaturez ??= goodSignaturez;
+                    a["pgp"].hasGoodSignaturez &&= goodSignaturez;
                 }
 
-                errs += out.stderr + "\n";
+                a["pgp"].errs += out.stderr + "\n";
             }
 
             const modification = isEncrypted || isSigned;
@@ -516,36 +768,21 @@ export default definePlugin({
     renderHeader: RenderIndicator,
 
     async start() {
+        this.blobA = document.createElement("a");
         await loadPKs();
         state.skeys = await Native.getSecretKeys();
         state.pkeys = await Native.getPubKeys();
-
-        function getSecretKey(): string | undefined {
-            const key = settings.store.secretKey;
-            return key !== "whatever" ? key : undefined;
-        }
-
-        function notifyPGPError(stderr: string): void {
-            showNotification({
-                title: "PGP",
-                body: stderr,
-                richBody: (
-                    <Span style={{ whiteSpace: "pre-wrap" }}>{stderr}</Span>
-                ),
-                onClick: () => copyWithToast(stderr),
-            });
-        }
 
         async function applyPGP(msg: MessageObject, ascii: boolean = true) {
             const encrypt = state.mode.startsWith("e");
             const signOnly = state.mode === "s";
 
-            if (!encrypt && !signOnly) {
+            if ((!encrypt && !signOnly) || msg.content.length == 0) {
                 return { cancel: false, unchanged: true };
             }
 
             if (encrypt) {
-                const [stdout, stderr, ec] = await Native.encryptText(
+                const [stdout, stderr, ec] = await Native.encrypt(
                     msg.content,
                     state.recipients,
                     {
@@ -673,6 +910,7 @@ export default definePlugin({
     },
 
     stop() {
+        (this.blobA as HTMLAnchorElement).remove();
         removeMessagePreSendListener(this.preSend);
         removeMessagePreEditListener(this.preEdit);
     },
