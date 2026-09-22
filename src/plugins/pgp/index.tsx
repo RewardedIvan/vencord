@@ -357,8 +357,7 @@ export default definePlugin({
             find: '["VIDEO","CLIP","AUDIO"]',
             replacement: {
                 match: /(\[\i>0&&\i\.length>0.{0,150}?children:)(.+?)(\}\),)(?<=showDownload:(\i).+?)/,
-                replace:
-                    "$1[$self.renderAttachmentIcon(arguments[0]),...$2]$3",
+                replace: "$1[$self.renderAttachmentIcon(arguments[0]),...$2]$3",
             },
         },
     ],

@@ -13,13 +13,17 @@ import {
 import { BaseText } from "@components/BaseText";
 import { Button as VCButton } from "@components/Button";
 import { UserContextProps } from "@plugins/biggerStreamPreview";
-import { NavContextMenuPatchCallback } from "@api/ContextMenu";
+import {
+    findGroupChildrenByChildId,
+    NavContextMenuPatchCallback,
+} from "@api/ContextMenu";
 import { PencilIcon } from "@components/Icons";
 import { Divider } from "@components/Divider";
 import { Margins } from "@components/margins";
 import { Message } from "@vencord/discord-types";
 import { showNotification } from "@api/Notifications";
 import { Span } from "@components/Span";
+import { KeyIcon } from "./icons";
 
 type Key = import("./native").Key;
 
@@ -113,11 +117,17 @@ export const userCtxPatch: NavContextMenuPatchCallback = (
     children,
     { user }: UserContextProps,
 ) => {
-    children.unshift(
+    const friendNickGroup = findGroupChildrenByChildId(
+        `add-friend-nickname`,
+        children,
+    );
+
+    (friendNickGroup ?? children).splice(
+        -1,
+        0,
         <Menu.MenuItem
             id={cl("set-pubkey")}
             label="Set PGP public key"
-            icon={PencilIcon}
             action={async () => {
                 openModal((modalProps) => (
                     <Modal {...modalProps} title="pgp">
@@ -144,16 +154,21 @@ export const messageCtxPatch: NavContextMenuPatchCallback = (
     props: { message: Message; itemHref?: string },
 ) => {
     const { message } = props;
-    console.log("propssss", props);
-    children.unshift(
+    //console.log("propssss", props);
+
+    const copyTextGroup = findGroupChildrenByChildId("copy-text", children);
+
+    (copyTextGroup ?? children).splice(
+        -1,
+        0,
         <Menu.MenuItem
             id={cl("import-pubkey")}
             label={
-                "import key" + props.itemHref
-                    ? " (will check the right-clicked link too)"
-                    : ""
+                "Try to Import PGP Key" +
+                (props.itemHref ? " (checks right-clicked link too)" : "")
             }
-            icon={PencilIcon}
+            icon={KeyIcon}
+            leadingAccessory={{ type: "icon", icon: KeyIcon }}
             action={async () => {
                 var errs = "",
                     keys = 0;
