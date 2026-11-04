@@ -5,8 +5,8 @@
  */
 
 import { definePluginSettings } from "@api/Settings";
+import { Button } from "@components/Button";
 import definePlugin, { OptionType } from "@utils/types";
-import { Button } from "@webpack/common";
 
 interface PresenceUpdate {
     user: {

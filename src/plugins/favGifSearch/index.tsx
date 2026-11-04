@@ -21,10 +21,12 @@ import "./tagColors.css";
 import { DataStore } from "@api/index";
 import { definePluginSettings } from "@api/Settings";
 import { classNameFactory } from "@api/Styles";
+import { Button } from "@components/Button";
 import ErrorBoundary from "@components/ErrorBoundary";
 import { Flex } from "@components/Flex";
 import { FormSwitch } from "@components/FormSwitch";
 import { DeleteIcon } from "@components/Icons";
+import { Text } from "@components/Text";
 import { copyToClipboard } from "@utils/clipboard";
 import { Devs } from "@utils/constants";
 import { ModalContent, ModalRoot, openModal } from "@utils/modal";
@@ -32,9 +34,7 @@ import definePlugin, { OptionType } from "@utils/types";
 import { SelectOption } from "@vencord/discord-types";
 import { findByPropsLazy } from "@webpack";
 import {
-    Button,
     ContextMenuApi,
-    Forms,
     Menu,
     React,
     SearchableSelect,
@@ -372,9 +372,9 @@ function AddTagModal({ SearchBarComponent, url }: AddTagModalProps) {
 
     return (
         <Flex flexDirection="column">
-            <Forms.FormTitle tag="h2">Edit Tags</Forms.FormTitle>
+            <Text tag="h2">Edit Tags</Text>
 
-            <Forms.FormTitle>Add New Tag</Forms.FormTitle>
+            <Text>Add New Tag</Text>
             <div style={{ display: "flex", flexDirection: "row", justifyItems: "stretch", gap: "0.1em" }}>
                 <SearchableSelect
                     options={gifTags.filter(t => !isTagInCollection(t.name, currentTags)).map(t => t.name).sort(sortByCategory).map(t => ({ label: t, value: t }))}
@@ -383,7 +383,7 @@ function AddTagModal({ SearchBarComponent, url }: AddTagModalProps) {
                     onChange={v => setSelectedTag(v)}
                 />
                 {selectedTag && (
-                    <Button size={Button.Sizes.LARGE} color={Button.Colors.TRANSPARENT} onClick={() => {
+                    <Button size="xs" onClick={() => {
                         setCurrentTags([...currentTags, selectedTag as any]);
                         setSelectedTag(undefined);
                     }}>Add Tag</Button>
@@ -406,7 +406,7 @@ function AddTagModal({ SearchBarComponent, url }: AddTagModalProps) {
                 <div key={tag}>
                     <Flex style={{ justifyContent: "space-between", padding: "0.5em" }}>
                         <span className={cl(`tag-${gifTags.find(t => t.name === tag)?.category}`)}>{tag}</span>
-                        <Button size={Button.Sizes.MIN} color={Button.Colors.RED} onClick={() => {
+                        <Button size="min" variant="dangerPrimary" onClick={() => {
                             setCurrentTags(currentTags.filter(t => t !== tag));
                         }}><DeleteIcon /></Button>
                     </Flex>
@@ -442,11 +442,11 @@ function CreateNewTagModal({ url }: CreateNewTagModalProps) {
 
     return (
         <div style={{ display: "flex", flexDirection: "row", gap: "0.2em", width: "100%" }}>
-            <Forms.FormTitle>Create New Tag</Forms.FormTitle>
+            <Text>Create New Tag</Text>
             <Flex flexDirection="column" style={{ marginTop: "1em", marginBottom: "1em" }}>
                 <section>
-                    <Forms.FormTitle>Name</Forms.FormTitle>
-                    <Forms.FormText>The unique identifier for your tag</Forms.FormText>
+                    <Text>Name</Text>
+                    <Text>The unique identifier for your tag</Text>
                     <TextInput
                         value={newTag.name}
                         onChange={e => setNewTag({ ...newTag, name: e.replace(/[- ]/g, "_").toLowerCase() })}
@@ -456,8 +456,8 @@ function CreateNewTagModal({ url }: CreateNewTagModalProps) {
                 </section>
 
                 <section>
-                    <Forms.FormTitle>Category</Forms.FormTitle>
-                    <Forms.FormText>Tag classification</Forms.FormText>
+                    <Text>Category</Text>
+                    <Text>Tag classification</Text>
                     <Select
                         options={tagCategories.map(c => ({ label: c, value: c }))}
                         select={v => setNewTag({ ...newTag, category: v })}
@@ -468,8 +468,8 @@ function CreateNewTagModal({ url }: CreateNewTagModalProps) {
                 </section>
 
                 <section>
-                    <Forms.FormTitle>Notes</Forms.FormTitle>
-                    <Forms.FormText>Additional information about this tag's purpose</Forms.FormText>
+                    <Text>Notes</Text>
+                    <Text>Additional information about this tag's purpose</Text>
                     <TextArea
                         value={newTag.notes}
                         onChange={e => setNewTag({ ...newTag, notes: e })}
@@ -477,8 +477,8 @@ function CreateNewTagModal({ url }: CreateNewTagModalProps) {
                 </section>
 
                 <section>
-                    <Forms.FormTitle>Alternate Names</Forms.FormTitle>
-                    <Forms.FormText>Comma separated list of alternative names for this tag</Forms.FormText>
+                    <Text>Alternate Names</Text>
+                    <Text>Comma separated list of alternative names for this tag</Text>
                     <TextInput
                         value={newTag.alternateNames.join(", ")}
                         onChange={e => setNewTag({ ...newTag, alternateNames: e.split(",").map(name => name.trim()) })}
@@ -517,7 +517,7 @@ function CreateNewTagModal({ url }: CreateNewTagModalProps) {
                 {currentGIFTags.map(tag => (
                     <div key={tag.name} style={{ display: "flex", flexDirection: "row", alignItems: "center", gap: "0.5em" }}>
                         <span className={cl(`tag-${tag.category}`)}>{tag.name}</span>
-                        <Button size={Button.Sizes.MIN} color={Button.Colors.RED} onClick={() => {
+                        <Button size="min" variant="dangerPrimary" onClick={() => {
                             setCurrentGIFTags(currentGIFTags.filter(t => t.name !== tag.name));
                         }}><DeleteIcon /></Button>
                     </div>

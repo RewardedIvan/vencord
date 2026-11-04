@@ -8,12 +8,12 @@ import { findGroupChildrenByChildId, NavContextMenuPatchCallback } from "@api/Co
 import { DataStore } from "@api/index";
 import { classNameFactory } from "@api/Styles";
 import { PencilIcon } from "@components/Icons";
-import { ErrorBoundary, Flex } from "@components/index";
+import { Button, ErrorBoundary, Flex, Text } from "@components/index";
 import { classes } from "@utils/misc";
 import { ModalContent, ModalHeader, ModalRoot, openModal } from "@utils/modal";
 import definePlugin from "@utils/types";
 import { Message } from "@vencord/discord-types";
-import { Button, Menu, SearchableSelect, Text, useMemo, useState } from "@webpack/common";
+import { Menu, SearchableSelect, useMemo, useState } from "@webpack/common";
 
 // const settings = definePluginSettings({
 // });
@@ -88,7 +88,7 @@ const messageCtxPatch: NavContextMenuPatchCallback = (children, { message }: { m
                     <ModalRoot {...modalProps}>
                         <ErrorBoundary>
                             <ModalHeader>
-                                <Text variant="heading-lg/normal">
+                                <Text tag="h1">
                                     Set timezone for {message.author.username}
                                 </Text>
                             </ModalHeader>
@@ -166,7 +166,7 @@ export default definePlugin({
                 res = "Invalid timezone";
             }
 
-            return <Text variant="text-xs/bold" color="header-muted" tag="span"> {res}</Text>;
+            return <Text weight="bold" color="header-muted" tag="span"> {res}</Text>;
         } else {
             return <></>;
         }

@@ -17,7 +17,6 @@ import {
 import {
     ChannelStore,
     showToast,
-    Toasts,
     Tooltip,
     UserStore,
 } from "@webpack/common";
@@ -389,7 +388,7 @@ export default definePlugin({
                             await navigator.clipboard.writeText(
                                 md(a).originalUrl ?? downloadURL,
                             );
-                            showToast("Copied!");
+                            showToast({ text: "Copied!" });
                         }}
                     >
                         <RenderIndicator
@@ -899,10 +898,7 @@ export default definePlugin({
             });
 
             upload.on("error", () =>
-                showToast(
-                    "Failed to upload signature file",
-                    Toasts.Type.FAILURE,
-                ),
+                showToast({ text: "Failed to upload signature file", variant: "critical" }),
             );
 
             upload.upload();
