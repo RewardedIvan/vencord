@@ -614,50 +614,86 @@ export const Devs = /* #__PURE__*/ Object.freeze({
        name: "alfred",
        id: 1038466644353232967n
    },
-   vv: {
-       name: "VV",
-       id: 254866377087778816n
-   },
-   u32: {
-       name: "u32",
-       id: 1063237286818488351n,
-   },
-   prism: {
-       name: "prism",
-       id: 390884143749136386n,
-   },
-   creations: {
-       name: "creations",
-       id: 209830981060788225n
-   },
-   nightmaresan: {
-       name: "NightmareSan",
-       id: 304239816466235392n
-   },
-   angelcube: {
-       name: "angelcube",
-       id: 958505257288208446n
-   },
-   Lunascape: {
-       name: "Lunascape",
-       id: 383365021415243776n
-   },
-   paige: {
-       name: "paige",
-       id: 1375697625864601650n
-   },
-   jax: {
-       name: "jax",
-       id: 1493703027801194598n
-   },
-   yuna0x0: {
-       name: "yuna0x0",
-       id: 213656926414831616n
-   },
-   Davri: {
-       name: "Davri",
-       id: 457579346282938368n
-   }
+    vv: {
+        name: "VV",
+        id: 254866377087778816n
+    },
+    u32: {
+        name: "u32",
+        id: 1063237286818488351n,
+    },
+    prism: {
+        name: "prism",
+        id: 390884143749136386n,
+    },
+    creations: {
+        name: "creations",
+        id: 209830981060788225n
+    },
+    nightmaresan: {
+        name: "NightmareSan",
+        id: 304239816466235392n
+    },
+    angelcube: {
+        name: "angelcube",
+        id: 958505257288208446n
+    },
+    Lunascape: {
+        name: "Lunascape",
+        id: 383365021415243776n
+    },
+    paige: {
+        name: "paige",
+        id: 1375697625864601650n
+    },
+    jax: {
+        name: "jax",
+        id: 1409995768395464754n
+    },
+    yuna0x0: {
+        name: "yuna0x0",
+        id: 213656926414831616n
+    },
+    scattagain: {
+        name: "Amelia",
+        id: 1098234477626544180n
+    },
+    Davri: {
+        name: "Davri",
+        id: 457579346282938368n
+    },
+    Kaede: {
+        name: "Kaede",
+        id: 1492642701320126504n
+    },
+    c0nnorgg: {
+        name: "c0nnorgg",
+        id: 1088882977985003620n,
+    },
+    f3tch: {
+        name: "f3tch",
+        id: 1016388460929626174n
+    },
+    kaxtusik: {
+        name: "kaxtusik",
+        id: 549599621056561152n
+    },
+    Kaerion: {
+        name: "Kaerion",
+        id: 1409130527973441658n
+    },
+    imnotplayinginreallife: {
+        name: "I'm not playing in real life",
+        id: 841939724306087986n
+    },
+    Nays: {
+        name: "Nays",
+        id: 344871509677965313n
+    },
+    NiNoX: {
+        name: "NiNoX",
+        id: 123435354958200833n
+    }
 } satisfies Record<string, Dev>);
 
 // iife so #__PURE__ works correctly
