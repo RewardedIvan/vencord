@@ -360,6 +360,13 @@ export default definePlugin({
                 replace: "$1[$self.renderAttachmentIcon(arguments[0]),...$2]$3",
             },
         },
+        {
+            find: /proxy_url\);return null==\i\?null:\(\i\.searchParams.append\("format","webp"\),/,
+            replacement: {
+                match: /(?<=proxy_url\);return null==(\i)\?null:\()\i\.searchParams\.append\("format","webp"\)(?=,)/,
+                replace: "($1.protocol==\"blob:\"?$1:($&))"
+            }
+        }
     ],
 
     renderAttachmentIcon({ downloadURL }: { downloadURL: string }) {
